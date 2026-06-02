@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gibson weedX</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#060607">
+    
+    <script src="https://unpkg.com/intasend-inline-js-sdk@3.0.4/build/intasend-inline.js"></script>
+
+    <link rel="manifest" href="data:application/manifest+json,{%22short_name%22:%22weedX%22,%22name%22:%22Gibson%20weedX%22,%22start_url%22:%22/%22,%22background_color%22:%22%23060607%22,%22display%22:%22standalone%22,%22theme_color%22:%22%2300E676%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/11438/11438780.png%22,%22type%22:%22image/png%22,%22sizes%22:%22512x512%22}]}">
+    
+    <style>
+        :root {
+            --bg-matrix: #060607;
+            --surface-card: #0D0E12;
+            --border-neon: #1A1D24;
+            --cyber-green: #00E676; /* Neon Rasta Green */
+            --cyber-gold: #FFD600;  /* Neon Rasta Gold */
+            --cyber-red: #FF1744;   /* Neon Rasta Red */
+            --text-neon: #FFFFFF;
+            --text-dim: #717784;
+        }
+
+        html, body {
+            background-color: var(--bg-matrix);
+            color: var(--text-neon);
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        header {
+            background: rgba(6, 6, 7, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-neon);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--cyber-green), var(--cyber-gold), var(--cyber-red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+            cursor: pointer;
+        }
+
+        .contact-owner {
+            font-size: 11px;
+            color: var(--cyber-gold);
+            text-decoration: none;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .right-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-badge-trigger {
+            position: relative;
+            cursor: pointer;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-card);
+            border: 1px solid var(--border-neon);
+            border-radius: 12px;
+            transition: border-color 0.2s ease;
+        }
+        .cart-badge-trigger.active-tab {
+            border-color: var(--cyber-green);
+            background: #0d1a12;
+        }
+
+        .cart-counter {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--cyber-gold);
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            border-radius: 6px;
+            padding: 2px 6px;
+        }
+
+        .promo-ticker {
+            background: linear-gradient(90deg, #1b1103, #0d0e12);
+            border-bottom: 1px solid rgba(255, 214, 0, 0.15);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        .promo-text {
+            color: var(--cyber-gold);
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .promo-timer {
+            color: var(--text-neon);
+            background: rgba(255, 23, 68, 0.2);
+            border: 1px solid var(--cyber-red);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .main-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 40px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .view-panel { display: none; }
+        .view-panel.active-panel { display: block; }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .product-card {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-neon);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .product-card.animated-pop {
+            transform: scale(0.92);
+            border-color: var(--cyber-green) !important;
+            background-color: #081c10 !important;
+        }
+
+        .img-viewport {
+            width: 100%;
+            height: 120px;
+            background-color: #090A0C;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-viewport img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .img-viewport img.visible-img {
+            opacity: 1;
+        }
+
+        .tag-category {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(6, 6, 7, 0.85);
+            backdrop-filter: blur(4px);
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border-left: 2px solid var(--cyber-green);
+            z-index: 5;
+        }
+
+        .details-wrapper {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+            line-height: 1.3;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 26px;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-price {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--cyber-gold);
+        }
+
+        .btn-add-action {
+            background-color: transparent;
+            color: var(--cyber-green);
+            border: 1px solid var(--border-neon);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-item-row {
+            background: var(--surface-card);
+            border: 1px solid var(--border-neon);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .cart-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .cart-info { flex-grow: 1; }
+        .cart-name { font-size: 12px; font-weight: 700; }
+        .cart-price { font-size: 11px; color: var(--cyber-gold); margin-top: 1px; }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #060607;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-neon);
+        }
+
+        .qty-btn {
+            background: none;
+            border: none;
+            color: var(--text-neon);
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .checkout-dock {
+            background: var(--surface-card);
+            border-top: 1px solid var(--border-neon);
+            border-radius: 20px 20px 0 0;
+            padding: 16px;
+            margin-top: 15px;
+        }
+
+        .dock-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .billing-info-wrapper {
+            margin-bottom: 14px;
+            background: #111216;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-neon);
+        }
+        .input-label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .input-field-group {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .input-field-group:last-child {
+            margin-bottom: 0;
+        }
+        .input-prefix {
+            background: #1A1D24;
+            border: 1px solid var(--border-neon);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+        }
+        .text-input-element {
+            flex-grow: 1;
+            background: #060607;
+            border: 1px solid var(--border-neon);
+            border-radius: 0 8px 8px 0;
+            padding: 10px;
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+        }
+        .text-input-element:focus {
+            border-color: var(--cyber-green);
+        }
+        .full-radius {
+            border-radius: 8px !important;
+        }
+
+        .btn-intasend-trigger {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(90deg, var(--cyber-green), #00b358);
+            color: #060607;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-intasend-trigger:disabled {
+            background: #1A1D24;
+            color: #434854;
+            cursor: not-allowed;
+            background-image: none;
+        }
+
+        .network-guard-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 3, 4, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .network-guard-overlay.guard-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .cyber-modal {
+            background: #0D0E12;
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            box-shadow: 0 0 40px rgba(255, 23, 68, 0.15);
+            width: 80%;
+            max-width: 310px;
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        #feedbackConsole {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .trust-badge-container img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intasend-modal-mount"></div>
+
+    <div class="network-guard-overlay" id="globalConnectivityGuard">
+        <div class="cyber-modal">
+            <div style="width:40px; height:40px; margin:0 auto 15px auto; border:2px dashed var(--cyber-red); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF1744" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"></path></svg>
+            </div>
+            <div style="font-size:14px; font-weight:800; text-transform:uppercase; margin-bottom:6px;">Link Failure</div>
+            <p style="font-size:11px; color:var(--text-dim); margin:0; line-height:1.4;">Active network connection lost. Reconnect data links to reload secure inventories.</p>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <div class="brand-logo" onclick="navigateToPanel('storefrontSection')">Gibson weedX</div>
+            <div class="right-header">
+                <a href="tel:0740489555" class="contact-owner">📞 Support</a>
+                <div class="cart-badge-trigger" id="headerCartTab" onclick="toggleCartPanel()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <div class="cart-counter" id="uiGlobalCounter">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="promo-ticker">
+            <span class="promo-text" id="promoHeadline">⚡ SECURE GATEWAY HUB LIVE</span>
+            <span class="promo-timer" id="countdownClock">00:00</span>
+        </div>
+
+        <div class="main-content-scroll">
+            <section id="storefrontSection" class="view-panel active-panel">
+                <div class="products-grid" id="catalogDynamicGrid"></div>
+            </section>
+
+            <section id="cartSection" class="view-panel">
+                <div style="display:flex; align-items:center; margin-bottom:15px; gap:10px;">
+                    <button style="background:var(--surface-card); border:1px solid var(--border-neon); color:white; padding:8px 14px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; text-transform:uppercase;" onclick="navigateToPanel('storefrontSection')">← Continue Shopping</button>
+                    <h4 style="margin:0; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Your Selections</h4>
+                </div>
+                
+                <div id="uiCartContainer"></div>
+                
+                <div class="checkout-dock">
+                    <div class="dock-row">
+                        <span style="font-size:12px; color:var(--text-dim);">Total Bill:</span>
+                        <span style="color:var(--cyber-gold); font-size:15px;" id="uiTotalSumDisplay">KES 0</span>
+                    </div>
+
+                    <div class="billing-info-wrapper">
+                        <label class="input-label">Customer Information</label>
+                        
+                        <div class="input-field-group">
+                            <input type="text" id="clientBillingName" class="text-input-element full-radius" placeholder="Your Full Name" oninput="validateBillingInputs()">
+                        </div>
+
+                        <div class="input-field-group">
+                            <input type="email" id="clientBillingEmail" class="text-input-element full-radius" placeholder="yourname@gmail.com" oninput="validateBillingInputs()">
+                        </div>
+
+                        <div class="input-field-group">
+                            <div class="input-prefix">+254</div>
+                            <input type="tel" id="clientPhoneNumber" class="text-input-element" placeholder="740489555" oninput="validateBillingInputs()">
+                        </div>
+                        <div id="prefixValidationWarning" style="color:var(--cyber-red); font-size:10px; font-weight:700; margin-top:5px; text-transform:uppercase; display:none;">Notice: Mobile wallets require localized numbers</div>
+                    </div>
+                    
+                    <button type="button" id="btnCallIntaSendSDK" class="btn-intasend-trigger" onclick="executeIntaSendWorkflow()" disabled>Choose Payment Method</button>
+                    
+                    <div class="trust-badge-container" style="margin-top: 20px; margin-bottom: 5px;">
+                        <span style="display:block; text-align: center">        
+                            <a href="https://intasend.com/security" target="_blank"><img src="https://intasend-prod-static.s3.amazonaws.com/img/trust-badges/intasend-trust-badge-v-dark.png" width="375px" alt="IntaSend Secure Payments (PCI-DSS Compliant)"></a>        
+                            <strong><a style="display: block; color: #fafafa; text-decoration: none; font-size: 0.8em; margin-top: 0.6em;" href="https://intasend.com/security" target="_blank">Secured by IntaSend Payments</a></strong>        
+                        </span>
+                    </div>
+
+                    <div id="feedbackConsole"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // High-Availability Static Cannabis CDN Assets
+        const PRODUCT_CATALOG = [
+            { id: 1, name: "Elements Rolling Paper 100 Lvs", category: "Accessories", desc: "Ultra thin rice rolling papers. Cleanest burn properties.", priceKES: 70, imgs: ["https://images.unsplash.com/photo-1594489428504-5c0c480a15fa?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1603909223429-69bb7101f420?auto=format&fit=crop&w=400&q=80"] },
+            { id: 2, name: "Raw Classic King Size Slim", category: "Accessories", desc: "Unrefined natural hemp fibers with organic gum lines.", priceKES: 90, imgs: ["https://images.unsplash.com/photo-1568526381923-caf3fd520382?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1606166325013-4903337a7ec7?auto=format&fit=crop&w=400&q=80"] },
+            { id: 3, name: "Raw Pre-Rolled Tips Pack", category: "Accessories", desc: "Natural unbleached fiber spacers optimized for structural airflow.", priceKES: 120, imgs: ["https://images.unsplash.com/photo-1603909223429-69bb7101f420?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1594489428504-5c0c480a15fa?auto=format&fit=crop&w=400&q=80"] },
+            { id: 4, name: "Local Premium SunGrown Blend", category: "Flower", desc: "Locally sourced curated dense clean flower buds.", priceKES: 250, imgs: ["https://images.unsplash.com/photo-1536693240781-e5d038314bbb?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1611073123049-2fb00d17743d?auto=format&fit=crop&w=400&q=80"] },
+            { id: 5, name: "Malawi Gold Landrace Grade", category: "Flower", desc: "Pure sticky sativa earthy profile strain straight from origin.", priceKES: 450, imgs: ["https://images.unsplash.com/photo-1568526381923-caf3fd520382?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1536693240781-e5d038314bbb?auto=format&fit=crop&w=400&q=80"] },
+            { id: 6, name: "Skywalker Indica Single Pre-Roll", category: "Pre-Rolls", desc: "Perfectly packed cone pre-roll filled with indoor trim flower.", priceKES: 300, imgs: ["https://images.unsplash.com/photo-1606166325013-4903337a7ec7?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1594489428504-5c0c480a15fa?auto=format&fit=crop&w=400&q=80"] },
+            { id: 7, name: "Organic Honey-Dip Glazed Blunt", category: "Pre-Rolls", desc: "Infused leaf wrapping bound with concentrated aromatic honey extract.", priceKES: 500, imgs: ["https://images.unsplash.com/photo-1603909223429-69bb7101f420?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1568526381923-caf3fd520382?auto=format&fit=crop&w=400&q=80"] },
+            { id: 8, name: "Infused Medicated Brownie Bites", category: "Edibles", desc: "Dark fudge chocolate squares precisely calibrated.", priceKES: 650, imgs: ["https://images.unsplash.com/photo-1536693240781-e5d038314bbb?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1611073123049-2fb00d17743d?auto=format&fit=crop&w=400&q=80"] },
+            { id: 9, name: "Watermelon THC Jelly Gummies", category: "Edibles", desc: "Fast activation sugar-dusted organic gel chews.", priceKES: 800, imgs: ["https://images.unsplash.com/photo-1606166325013-4903337a7ec7?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1594489428504-5c0c480a15fa?auto=format&fit=crop&w=400&q=80"] },
+            { id: 10, name: "Cali Import Diamond Vape Cart", category: "Vapes", desc: "High potency distillate extraction capsule with heavy flavor profiles.", priceKES: 3500, imgs: ["https://images.unsplash.com/photo-1611073123049-2fb00d17743d?auto=format&fit=crop&w=400&q=80", "https://images.unsplash.com/photo-1536693240781-e5d038314bbb?auto=format&fit=crop&w=400&q=80"] }
+        ];
+
+        let INTERNAL_CART = {};
+        let netCheckoutSum = 0;
+        let imageToggleState = 0;
+        let activePanelID = 'storefrontSection';
+
+        function runNetworkDiagnosticCheck() {
+            const overlay = document.getElementById('globalConnectivityGuard');
+            if (!navigator.onLine) {
+                overlay.classList.add('guard-active');
+            } else {
+                overlay.classList.remove('guard-active');
+            }
+        }
+
+        window.addEventListener('online', runNetworkDiagnosticCheck);
+        window.addEventListener('offline', runNetworkDiagnosticCheck);
+
+        function startImageCarouselEngine() {
+            setInterval(() => {
+                imageToggleState = imageToggleState === 0 ? 1 : 0;
+                document.querySelectorAll('.img-viewport').forEach(viewport => {
+                    const images = viewport.querySelectorAll('img');
+                    if(images.length > 1) {
+                        images.forEach((img, index) => {
+                            if(index === imageToggleState) {
+                                img.classList.add('visible-img');
+                            } else {
+                                img.classList.remove('visible-img');
+                            }
+                        });
+                    }
+                });
+            }, 3000);
+        }
+
+        function initializePromoTimer() {
+            let initialMinutes = 14;
+            let initialSeconds = 22;
+            const timerLabel = document.getElementById('countdownClock');
+            
+            setInterval(() => {
+                if (initialSeconds === 0) {
+                    if (initialMinutes === 0) {
+                        initialMinutes = 20;
+                        initialSeconds = 0;
+                    } else {
+                        initialMinutes--;
+                        initialSeconds = 59;
+                    }
+                } else {
+                    initialSeconds--;
+                }
+                timerLabel.innerText = `${initialMinutes < 10 ? "0" + initialMinutes : initialMinutes}:${initialSeconds < 10 ? "0" + initialSeconds : initialSeconds}`;
+            }, 1000);
+        }
+
+        function renderGridCatalog() {
+            const wrapper = document.getElementById('catalogDynamicGrid');
+            wrapper.innerHTML = PRODUCT_CATALOG.map(item => `
+                <div class="product-card" id="card-node-${item.id}">
+                    <div class="img-viewport">
+                        <span class="tag-category">${item.category}</span>
+                        <img src="${item.imgs[0]}" class="visible-img" alt="${item.name}">
+                        <img src="${item.imgs[1]}" alt="${item.name}">
+                    </div>
+                    <div class="details-wrapper">
+                        <div class="item-title">${item.name}</div>
+                        <div class="item-desc">${item.desc}</div>
+                        <div class="card-footer">
+                            <span class="item-price">KES ${item.priceKES.toLocaleString()}</span>
+                            <button class="btn-add-action" onclick="animateAndAddItem(${item.id})">+</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function animateAndAddItem(id) {
+            const targetCard = document.getElementById(`card-node-${id}`);
+            if (targetCard) {
+                targetCard.classList.add('animated-pop');
+                setTimeout(() => {
+                    targetCard.classList.remove('animated-pop');
+                }, 220);
+            }
+            addItemToCart(id);
+        }
+
+        function addItemToCart(id) {
+            if (INTERNAL_CART[id]) {
+                INTERNAL_CART[id].quantity += 1;
+            } else {
+                const queryAsset = PRODUCT_CATALOG.find(p => p.id === id);
+                INTERNAL_CART[id] = { ...queryAsset, quantity: 1 };
+            }
+            updateApplicationMetrics();
+        }
+
+        function modifyQty(id, direction) {
+            if (!INTERNAL_CART[id]) return;
+            INTERNAL_CART[id].quantity += direction;
+            if (INTERNAL_CART[id].quantity <= 0) {
+                delete INTERNAL_CART[id];
+            }
+            updateApplicationMetrics();
+            renderCartLayouts();
+        }
+
+        function updateApplicationMetrics() {
+            const items = Object.values(INTERNAL_CART);
+            const totalCount = items.reduce((acc, curr) => acc + curr.quantity, 0);
+            document.getElementById('uiGlobalCounter').innerText = totalCount;
+            
+            netCheckoutSum = items.reduce((acc, curr) => acc + (curr.priceKES * curr.quantity), 0);
+            document.getElementById('uiTotalSumDisplay').innerText = `KES ${netCheckoutSum.toLocaleString()}`;
+            
+            validateBillingInputs();
+        }
+
+        // REMASTERED INTERFUSED VALIDATOR: Enables choice for all cards/wallets instantly
+        function validateBillingInputs() {
+            const nameField = document.getElementById('clientBillingName').value.trim();
+            const emailField = document.getElementById('clientBillingEmail').value.trim();
+            const phoneField = document.getElementById('clientPhoneNumber');
+            const warn = document.getElementById('prefixValidationWarning');
+            const checkoutBtn = document.getElementById('btnCallIntaSendSDK');
+            
+            phoneField.value = phoneField.value.replace(/[^0-9]/g, '');
+            let phoneRaw = phoneField.value.trim();
+
+            const cartItemCount = Object.values(INTERNAL_CART).reduce((acc, curr) => acc + curr.quantity, 0);
+
+            // Base verification to unlock the button
+            if (cartItemCount > 0 && nameField.length >= 2 && emailField.length >= 5 && emailField.includes('@') && phoneRaw.length >= 7) {
+                checkoutBtn.disabled = false;
+            } else {
+                checkoutBtn.disabled = true;
+            }
+
+            // Optional warning helper if using non-Safaricom prefixes for mobile money
+            const safaricomPrefixes = ['70', '71', '72', '74', '79', '11', '75', '76', '10'];
+            if (phoneRaw.length > 0 && !safaricomPrefixes.includes(phoneRaw.substring(0, 2))) {
+                warn.style.display = "block";
+            } else {
+                warn.style.display = "none";
+            }
+        }
+
+        function renderCartLayouts() {
+            const box = document.getElementById('uiCartContainer');
+            const elements = Object.values(INTERNAL_CART);
+
+            if (elements.length === 0) {
+                box.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:40px 10px; font-size:12px;">Basket empty. Choose options to unlock checkout framework.</div>`;
+                return;
+            }
+
+            box.innerHTML = elements.map(item => `
+                <div class="cart-item-row">
+                    <img src="${item.imgs[0]}" class="cart-thumb">
+                    <div class="cart-info">
+                        <div class="cart-name">${item.name}</div>
+                        <div class="cart-price">KES ${(item.priceKES * item.quantity).toLocaleString()}</div>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="modifyQty(${item.id}, -1)">-</button>
+                        <span style="font-size:12px; font-weight:700;">${item.quantity}</span>
+                        <button class="qty-btn" onclick="modifyQty(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // =================================================================
+        // 🛠️ HARDENED PHONE GESTURE & BACK NAVIGATION CONTROLLER
+        // =================================================================
+        function navigateToPanel(panelID, isBackGesture = false) {
+            activePanelID = panelID;
+            
+            // Sync visible view states
+            document.querySelectorAll('.view-panel').forEach(view => view.classList.remove('active-panel'));
+            document.getElementById(panelID).classList.add('active-panel');
+            
+            const cartTab = document.getElementById('headerCartTab');
+            if (panelID === 'cartSection') {
+                cartTab.classList.add('active-tab');
+                renderCartLayouts();
+                validateBillingInputs();
+                
+                // Push virtual state to trap phone back keys and gestures safely inside the cart panel
+                if (!isBackGesture) {
+                    window.history.pushState({ panel: 'cartSection' }, '');
+                }
+            } else {
+                cartTab.classList.remove('active-tab');
+                // Clean browser path balance if returning normally
+                if (!isBackGesture && window.history.state?.panel === 'cartSection') {
+                    window.history.back();
+                }
+            }
+        }
+
+        function toggleCartPanel() {
+            if (activePanelID === 'cartSection') {
+                navigateToPanel('storefrontSection');
+            } else {
+                navigateToPanel('cartSection');
+            }
+        }
+
+        // Intercept device-level system back tracking or navigation swipes
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.panel === 'cartSection') {
+                navigateToPanel('cartSection', true);
+            } else {
+                navigateToPanel('storefrontSection', true);
+            }
+        });
+
+        // Seed initial homepage anchor entry inside browser history stack
+        window.history.replaceState({ panel: 'storefrontSection' }, '');
+
+        // =================================================================
+        // 🚀 UNIMPEDED INTASEND MULTI-GATEWAY SYSTEM MODAL OVERLAY
+        // =================================================================
+        function executeIntaSendWorkflow() {
+            if (!navigator.onLine) {
+                runNetworkDiagnosticCheck();
+                return;
+            }
+
+            const clientName = document.getElementById('clientBillingName').value.trim();
+            const clientEmail = document.getElementById('clientBillingEmail').value.trim();
+            const clientPhone = "254" + document.getElementById('clientPhoneNumber').value.trim();
+            const feedback = document.getElementById('feedbackConsole');
+
+            feedback.innerText = 'Initializing Payment Hub...';
+            feedback.style.color = 'var(--cyber-gold)';
+
+            let intasendInstance = new IntaSend({
+                publicAPIKey: "ISPubKey_live_45dd8033-be6a-4604-959f-09f4ff39c457",
+                live: true
+            });
+
+            intasendInstance.on("PROGRESS", (results) => {
+                feedback.innerText = "Awaiting verification window authentication...";
+                feedback.style.color = "var(--cyber-gold)";
+            });
+
+            intasendInstance.on("FAILED", (results) => {
+                feedback.innerText = "Payment window closed or connection rejected.";
+                feedback.style.color = "var(--cyber-red)";
+            });
+
+            intasendInstance.on("COMPLETE", (results) => {
+                feedback.innerText = "Transaction complete! Cargo authorized.";
+                feedback.style.color = "var(--cyber-green)";
+                INTERNAL_CART = {};
+                updateApplicationMetrics();
+                renderCartLayouts();
+                navigateToPanel('storefrontSection');
+            });
+
+            intasendInstance.run({
+                amount: netCheckoutSum,
+                currency: "KES",
+                first_name: clientName.split(" ")[0] || "Customer",
+                last_name: clientName.split(" ")[1] || "Gibson",
+                email: clientEmail,
+                phone_number: clientPhone,
+                container: document.getElementById('intasend-modal-mount')
+            });
+        }
+
+        // Initialize App
+        runNetworkDiagnosticCheck();
+        renderGridCatalog();
+        startImageCarouselEngine();
+        initializePromoTimer();
+    </script>
+</body>
+</html>
